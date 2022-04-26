@@ -1,5 +1,5 @@
 {
-  "name": "mongodb-pipeline-builder",
+  "name": "mongodb-aggregation-builder",
   "version": "3.4.0-0",
   "description": "Pipeline constructor for the aggregate method of a mongoDB collection",
   "main": "index.js",
@@ -18,7 +18,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MikeDev75015/mongodb-pipeline-builder.git"
+    "url": "git+https://github.com/smithg09/mongo-aggregation-builder.git"
   },
   "keywords": [
     "mongodb",
@@ -31,12 +31,11 @@
     "aggregation",
     "pagination"
   ],
-  "author": "Mickaël NODANCHE <mikeonline75@gmail.com> (https://cv-mikeonline.web.app)",
+  "author": "Smith Gajjar <smith.gajjar@gmail.com> (https://smithgajjar.dev)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/MikeDev75015/mongodb-pipeline-builder/issues"
+    "url": "https://github.com/smithg09/mongo-aggregation-builder/issues"
   },
-  "homepage": "https://mikedev75015.github.io",
   "devDependencies": {
     "@babel/core": "^7.13.10",
     "@babel/plugin-proposal-class-properties": "^7.13.0",
