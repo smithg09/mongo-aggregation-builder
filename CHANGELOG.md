@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 3.4.0 (2022-04-26)
+
 ## [3.4.0-0](https://github.com/MikeDev75015/mongodb-pipeline-builder/compare/v3.3.1...v3.4.0-0) (2022-01-21)
 
 
