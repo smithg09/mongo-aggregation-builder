@@ -1,0 +1,12 @@
+node_modules
+.idea
+.idea/vcs.xml
+.idea/mongodb-pipeline-builder.iml
+.idea/*
+dist
+coverage
+documentation
+test-report.xml
+000.refresh-local-project.cmd
+tests
+

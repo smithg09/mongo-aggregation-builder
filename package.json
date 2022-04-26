@@ -1,0 +1,76 @@
+{
+  "name": "mongodb-pipeline-builder",
+  "version": "3.4.0-0",
+  "description": "Pipeline constructor for the aggregate method of a mongoDB collection",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "prepare": "npm run build",
+    "build": "tsc",
+    "test": "jest --runInBand",
+    "test-cov": "jest --runInBand --coverage",
+    "test:ci": "CI=true npm test -- --coverage --testResultsProcessor=jest-sonar-reporter",
+    "compodoc": "npx compodoc -p tsconfig.json lib --theme postmark",
+    "tag-pre-release": "standard-version --prerelease",
+    "publish-pre-release": "npm publish dist --tag prerelease",
+    "tag-release": "standard-version",
+    "publish-release": "npm publish dist --tag latest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MikeDev75015/mongodb-pipeline-builder.git"
+  },
+  "keywords": [
+    "mongodb",
+    "mongoose",
+    "aggregate",
+    "pipeline",
+    "builder",
+    "helper",
+    "constructor",
+    "aggregation",
+    "pagination"
+  ],
+  "author": "Mickaël NODANCHE <mikeonline75@gmail.com> (https://cv-mikeonline.web.app)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MikeDev75015/mongodb-pipeline-builder/issues"
+  },
+  "homepage": "https://mikedev75015.github.io",
+  "devDependencies": {
+    "@babel/core": "^7.13.10",
+    "@babel/plugin-proposal-class-properties": "^7.13.0",
+    "@babel/plugin-proposal-decorators": "^7.13.5",
+    "@babel/plugin-transform-runtime": "^7.13.10",
+    "@babel/preset-env": "^7.13.10",
+    "@babel/preset-typescript": "^7.13.0",
+    "@compodoc/compodoc": "^1.1.11",
+    "@types/jest": "^26.0.20",
+    "jest": "^26.6.3",
+    "jest-sonar-reporter": "^2.0.0",
+    "standard-version": "^9.1.1",
+    "ts-node": "^9.1.1",
+    "tslint": "^6.1.3",
+    "typescript": "^4.2.3"
+  },
+  "jest": {
+    "rootDir": "lib",
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
+    "testRegex": ".test.ts$",
+    "coverageDirectory": "../coverage",
+    "coveragePathIgnorePatterns": [
+      "/.circleci/",
+      "/coverage/",
+      "/documentation/",
+      "/node_modules/",
+      "/dist/"
+    ],
+    "testEnvironment": "node",
+    "reporters": [
+      "default"
+    ]
+  }
+}

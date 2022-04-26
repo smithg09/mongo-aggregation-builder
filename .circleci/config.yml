@@ -1,0 +1,509 @@
+version: 2.1
+orbs:
+  sonarcloud: sonarsource/sonarcloud@1.0.2
+  slack: circleci/slack@4.3.0
+  jq: circleci/jq@2.2.0
+
+aliases:
+  - &restore-cache
+    restore_cache:
+      key: dependency-cache-{{ checksum "package.json" }}
+  - &save-cache
+    save_cache:
+      key: dependency-cache-{{ checksum "package.json" }}
+      paths:
+        - ./node_modules
+  - &install-deps
+    run:
+      name: Install dependencies
+      command: npm install
+  - &build-package
+    run:
+      name: Build
+      command: npm run build
+  - &run-unit-tests
+    run:
+      name: Test
+      command: npm run test:ci
+  - &update-npm-version
+    run:
+      name: Update NPM version
+      command: 'sudo npm install -g npm@latest'
+
+commands:
+  git-create-branch-follow-tag:
+    description: "Commit and push the branch tag on the remote"
+    parameters:
+      branch:
+        type: string
+        default: release
+    steps:
+      - run:
+          name: Create the << parameters.branch >> branch
+          command: git checkout -b << parameters.branch >>
+      - run:
+          name: Create the << parameters.branch >> version tag
+          command: npm run tag-<< parameters.branch >>
+      - run:
+          name: Commit and push the << parameters.branch >> tag on remote
+          command: git push --follow-tags -q https://${GH_TOKEN}@github.com/MikeDev75015/mongodb-pipeline-builder.git << parameters.branch >>
+
+  git-delete-branch:
+    description: "Delete the specific branch on the remote"
+    parameters:
+      branch:
+        type: string
+        default: develop
+    steps:
+      - run:
+          name: Delete the << parameters.branch >> branch on remote
+          command: git push -d -q https://${GH_TOKEN}@github.com/MikeDev75015/mongodb-pipeline-builder.git << parameters.branch >>
+
+  authenticate-npm-and-publish:
+    description: "Authenticate to npm account and publish new package version"
+    parameters:
+      branch:
+        type: string
+        default: release
+    steps:
+      - run:
+          name: NPM Account Authentication
+          command: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
+      - run:
+          name: Publish package on npm
+          command: npm run publish-<< parameters.branch >>
+
+  create-merge-pull-request:
+    description: "Create and merge pull request then delete branch"
+    parameters:
+      branch:
+        type: string
+        default: release
+    steps:
+      - run:
+          name: Checkout to the << parameters.branch >> branch
+          command: git checkout << parameters.branch >>
+      - run:
+          name: Create a pull request to merge into the main branch
+          command: gh pr create -H << parameters.branch >> -f -B main
+      - run:
+          name: Merge the pull request and delete the << parameters.branch >> branch
+          command: gh pr merge << parameters.branch >> -m -d
+
+  git-config-local-user:
+    description: "Configure the default identity for the git account"
+    steps:
+      - run: git config credential.helper 'cache --timeout=120'
+      - run: git config user.email ${USER_EMAIL}
+      - run: git config user.name ${USER_NAME}
+
+  install-github-cli:
+    description: "Installs the latest Github CLI version"
+    steps:
+      - jq/install
+      - run:
+          name: Install Github CLI
+          command: |
+            LATEST_RELEASE=$(curl -s https://api.github.com/repos/cli/cli/releases/latest)
+            VERSION=$(echo $LATEST_RELEASE | jq -r '.tag_name')
+            DEB_URL=$(echo $LATEST_RELEASE | jq -r '.assets[].browser_download_url | select(. | contains("linux_amd64.deb"))')
+            wget --quiet -O gh_latest.deb $DEB_URL
+            sudo apt install ./gh_latest.deb
+          description: Gets latest release version of Github CLI
+
+  copy-required-files-to-dist:
+    description: "Copy all the required files to dist directory"
+    steps:
+      - run:
+          name: Copy Readme.md to dist
+          command: cp -rf Readme.md dist
+      - run:
+          name: Copy CHANGELOG.md to dist
+          command: cp -rf CHANGELOG.md dist
+      - run:
+          name: Copy LICENSE to dist
+          command: cp -rf LICENSE dist
+      - run:
+          name: Copy package.json to dist
+          command: cp -rf package.json dist
+
+jobs:
+  build:
+    docker:
+      - image: circleci/node:12
+    resource_class: small
+    steps:
+      - checkout
+      - *update-npm-version
+      - *restore-cache
+      - *install-deps
+      - *save-cache
+      - *build-package
+      - persist_to_workspace:
+          root: .
+          paths:
+            - 'dist'
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+
+  unit_tests:
+    docker:
+      - image: circleci/node:12
+    resource_class: small
+    steps:
+      - checkout
+      - *restore-cache
+      - *install-deps
+      - *run-unit-tests
+      - sonarcloud/scan
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+
+  prepare-version:
+    docker:
+      - image: circleci/node:12
+    resource_class: small
+    parameters:
+      branch:
+        type: string
+        default: release
+    steps:
+      - checkout
+      - *restore-cache
+      - *install-deps
+      - attach_workspace:
+          at: .
+      - git-config-local-user
+      - git-create-branch-follow-tag:
+          branch: << parameters.branch >>
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+
+  publish-package:
+    docker:
+      - image: circleci/node:12
+    resource_class: small
+    parameters:
+      branch:
+        type: string
+        default: release
+    steps:
+      - checkout
+      - *restore-cache
+      - *install-deps
+      - attach_workspace:
+          at: .
+      - copy-required-files-to-dist
+      - authenticate-npm-and-publish:
+          branch: << parameters.branch >>
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+
+  clean-repository:
+    docker:
+      - image: circleci/node:12
+    resource_class: small
+    parameters:
+      branch:
+        type: string
+        default: develop
+    steps:
+      - checkout
+      - git-config-local-user
+      - git-delete-branch:
+          branch: << parameters.branch >>
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+
+  final-repository-operations:
+    docker:
+      - image: circleci/node:12
+    resource_class: small
+    parameters:
+      branch:
+        type: string
+        default: release
+    steps:
+      - checkout
+      - git-config-local-user
+      - install-github-cli
+      - create-merge-pull-request:
+          branch: << parameters.branch >>
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+
+  notify-success-job:
+    docker:
+      - image: cimg/base:2020.01
+    resource_class: small
+    steps:
+      - slack/notify:
+          event: always
+          template: basic_success_1
+
+workflows:
+  build-and-test-default:
+    when:
+      not: << pipeline.git.tag >>
+    jobs:
+      - build:
+          context: SLACK
+          filters:
+            branches:
+              ignore:
+                - test
+                - release
+                - pre-release
+                - main
+      - unit_tests:
+          context:
+            - SONARCLOUD
+            - SLACK
+          requires:
+            - build
+          filters:
+            branches:
+              ignore:
+                - test
+                - release
+                - pre-release
+                - main
+      - notify-success-job:
+          name: build-unit_tests-success
+          context: SLACK
+          requires:
+            - build
+            - unit_tests
+          filters:
+            branches:
+              ignore:
+                - test
+                - release
+                - pre-release
+                - main
+
+      - approval-prepare-version:
+          type: approval
+          requires:
+            - build
+            - unit_tests
+            - build-unit_tests-success
+          filters:
+            branches:
+              only:
+                - develop
+                - feature
+
+      - prepare-version:
+          name: prepare-release-version
+          context:
+            - GIT
+            - SLACK
+          requires:
+            - build
+            - unit_tests
+            - build-unit_tests-success
+            - approval-prepare-version
+          filters:
+            branches:
+              only:
+                - develop
+      - notify-success-job:
+          name: prepare-release-version-success
+          context: SLACK
+          requires:
+            - approval-prepare-version
+            - prepare-release-version
+          filters:
+            branches:
+              only:
+                - develop
+
+      - prepare-version:
+          name: prepare-pre-release-version
+          branch: pre-release
+          context:
+            - GIT
+            - SLACK
+          requires:
+            - build
+            - unit_tests
+            - build-unit_tests-success
+            - approval-prepare-version
+          filters:
+            branches:
+              only:
+                - feature
+      - notify-success-job:
+          name: prepare-pre-release-version-success
+          context: SLACK
+          requires:
+            - approval-prepare-version
+            - prepare-pre-release-version
+          filters:
+            branches:
+              only:
+                - feature
+
+
+  update-repository:
+    when:
+      not: << pipeline.git.tag >>
+    jobs:
+      - clean-repository:
+          name: clean-origin-develop
+          context:
+            - GIT
+            - SLACK
+          filters:
+            branches:
+              only:
+                - release
+
+      - clean-repository:
+          name: clean-origin-feature
+          branch: feature
+          context:
+            - GIT
+            - SLACK
+          filters:
+            branches:
+              only:
+                - pre-release
+
+  update-main-code-analysis:
+    when:
+      not: << pipeline.git.tag >>
+    jobs:
+      - unit_tests:
+          context:
+            - SONARCLOUD
+            - SLACK
+          filters:
+            branches:
+              only:
+                - main
+
+  publish-release-version:
+    jobs:
+      - build:
+          context: SLACK
+          filters:
+            tags:
+              only: /^v\d+\.\d+\.\d+$/
+            branches:
+              ignore: /.*/
+      - publish-package:
+          name: publish-release-package
+          context:
+            - GIT
+            - SLACK
+          requires:
+            - build
+          filters:
+            tags:
+              only: /^v\d+\.\d+\.\d+$/
+            branches:
+              ignore: /.*/
+      - final-repository-operations:
+          name: final-release-operations
+          context:
+            - GIT
+            - SLACK
+          requires:
+            - build
+            - publish-release-package
+          filters:
+            tags:
+              only: /^v\d+\.\d+\.\d+$/
+            branches:
+              ignore: /.*/
+      - notify-success-job:
+          name: process-release-success
+          context: SLACK
+          requires:
+            - build
+            - publish-release-package
+            - final-release-operations
+          filters:
+            tags:
+              only: /^v\d+\.\d+\.\d+$/
+            branches:
+              ignore: /.*/
+
+  publish-pre-release-version:
+    jobs:
+      - build:
+          context: SLACK
+          filters:
+            tags:
+              only: /^v\d+\.\d+\.\d+\-\d+$/
+            branches:
+              ignore: /.*/
+      - publish-package:
+          name: publish-pre-release-package
+          branch: pre-release
+          context:
+            - GIT
+            - SLACK
+          requires:
+            - build
+          filters:
+            tags:
+              only: /^v\d+\.\d+\.\d+\-\d+$/
+            branches:
+              ignore: /.*/
+      - final-repository-operations:
+          name: final-pre-release-operations
+          branch: pre-release
+          context:
+            - GIT
+            - SLACK
+          requires:
+            - build
+            - publish-pre-release-package
+          filters:
+            tags:
+              only: /^v\d+\.\d+\.\d+\-\d+$/
+            branches:
+              ignore: /.*/
+      - notify-success-job:
+          name: process-prerelease-success
+          context: SLACK
+          requires:
+            - build
+            - publish-pre-release-package
+            - final-pre-release-operations
+          filters:
+            tags:
+              only: /^v\d+\.\d+\.\d+\-\d+$/
+            branches:
+              ignore: /.*/
+
+
+  test-workflow:
+    when:
+      not: << pipeline.git.tag >>
+    jobs:
+      - approval-test:
+          type: approval
+          filters:
+            branches:
+              only:
+                - test
+      - clean-repository:
+          name: clean-origin-test
+          branch: test
+          context: GIT
+          requires:
+            - approval-test
+          filters:
+            branches:
+              only:
+                - test
