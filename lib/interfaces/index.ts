@@ -22,6 +22,7 @@ export { GraphLookupStageInterface } from './stages/graph-lookup-stage.interface
 export { GroupStageInterface } from './stages/group-stage.interface';
 export { LookupConditionInterface } from './stages/lookup-condition.interface';
 export { LookupEqualityInterface } from './stages/lookup-equality.interface';
+export { LookupVariableListInterface } from './stages/lookup-variable-list.interface';
 export { LookupStageInterface } from './stages/lookup-stage.interface';
 export { MergeStageInterface, WhenMatchedType, WhenNotMatchedType } from './stages/merge-stage.interface';
 export { OutStageInterface } from './stages/out-stage.interface';
@@ -29,5 +30,3 @@ export { ReplaceRootStageInterface } from './stages/replace-root-stage.interface
 export { SampleStageInterface } from './stages/sample-stage.interface';
 export { UnionWithStageInterface } from './stages/union-with-stage.interface';
 export { UnwindStageInterface } from './stages/unwind-stage.interface';
-
-
