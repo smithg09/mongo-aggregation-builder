@@ -2,8 +2,8 @@
   "name": "mongodb-aggregation-builder",
   "version": "1.0.1",
   "description": "Pipeline constructor for the aggregate method of a mongoDB collection",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "prepare": "npm run build",
     "build": "tsc",
@@ -12,9 +12,9 @@
     "test:ci": "CI=true npm test -- --coverage --testResultsProcessor=jest-sonar-reporter",
     "compodoc": "npx compodoc -p tsconfig.json lib --theme postmark",
     "tag-pre-release": "standard-version --prerelease",
-    "publish-pre-release": "npm publish dist --tag prerelease",
+    "publish-pre-release": "npm publish --tag prerelease",
     "tag-release": "standard-version",
-    "publish-release": "npm publish dist --tag latest"
+    "publish-release": "npm publish --tag latest"
   },
   "repository": {
     "type": "git",
