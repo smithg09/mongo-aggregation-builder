@@ -1,6 +1,6 @@
 {
   "name": "mongodb-aggregation-builder",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Pipeline constructor for the aggregate method of a mongoDB collection",
   "main": "index.js",
   "types": "index.d.ts",
@@ -14,7 +14,8 @@
     "tag-pre-release": "standard-version --prerelease",
     "publish-pre-release": "npm publish dist --tag prerelease",
     "tag-release": "standard-version",
-    "publish-release": "npm publish dist --tag latest"
+    "publish-release": "npm run copy-release-files && npm publish dist --tag latest",
+    "copy-release-files": "copyfiles package.json Readme.md .npmignore .npmrc dist"
   },
   "repository": {
     "type": "git",
@@ -71,5 +72,8 @@
     "reporters": [
       "default"
     ]
+  },
+  "dependencies": {
+    "copyfiles": "^2.4.1"
   }
 }
