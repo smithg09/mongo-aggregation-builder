@@ -618,8 +618,11 @@ export class AggregationBuilder {
         const stageType: string = Object.keys(stageToValidate)[0].substr(1);
         const stageValue: any = Object.values(stageToValidate)[0];
         const payloadError = this.validatePayload(stageType, stageValue);
-
-        if (!stageValue || payloadError) {
+        let bypassError = false;
+        if (stageType === 'skip' && stageValue === 0) {
+            bypassError = true;
+        }
+        if ((!stageValue && !bypassError) || payloadError) {
             const errorMessage = !stageValue
                 ? `The ${stageType} stage value is not valid.`
                 : payloadError;

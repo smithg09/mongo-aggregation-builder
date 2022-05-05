@@ -53,6 +53,9 @@ const userCurrentTopicComponentStatuses = new AggregationBuilder('UserCurrentTop
         currentCourse: ArrayElemAt('$currentCourse', 0),
         currentTopic: ArrayElemAt('$currentTopic', 0)
     })
+    .Limit(1)
+    .Skip(0)
+    .Sort({ createdAt: 1 })
     .getPipeline()
 
 console.log(JSON.stringify(userCurrentTopicComponentStatuses, null, 2))
