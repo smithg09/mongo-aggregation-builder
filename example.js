@@ -11,41 +11,41 @@ const TopicsAggregation = new AggregationBuilder('Topics')
 const userCurrentTopicComponentStatuses = new AggregationBuilder('UserCurrentTopic')
     .Project(OnlyPayload('id', 'currentTopicComponentType', 'enrollmentType', 'currentLearningObjective', 'currentCourse', 'currentTopic', 'user'))
     .Match({ 'user.typeId': 'userId', 'currentCourse.typeId': 'courseId' })
-    // .Lookup(
-    //     ConditionPayload('Course', 'currentCourse',
-    //         {
-    //             variableList: [
-    //                 { var: 'courseId', source: 'currentCourse.typeId', key: 'primary' }
-    //             ],
-    //             nestedAggregation: new AggregationBuilder('Course')
-    //                 .Project(OnlyPayload('id', 'title', 'description', 'bannerTitle', 'bannerDescription', 'badgeDescription', 'defaultLoComponentRule', 'chapters'))
-    //                 .Lookup(
-    //                     ConditionPayload('Chapter', 'chapters',
-    //                         {
-    //                             variableList: [
-    //                                 { var: 'chapterId', source: 'chapters.typeId', key: 'primary' }
-    //                             ],
-    //                             nestedAggregation: new AggregationBuilder('Chapter')
-    //                                 .Match(Expression(Equal('$status', 'published')))
-    //                                 .Project(OnlyPayload('id', 'title', 'order', 'topics'))
-    //                                 .Lookup(
-    //                                     ConditionPayload('Topic', 'topics',
-    //                                         {
-    //                                             variableList: [
-    //                                                 { var: 'topicsId', source: 'topics.typeId', key: 'primary' }
-    //                                             ],
-    //                                             nestedAggregation: TopicsAggregation
-    //                                         })
-    //                                 )
-    //                         })
-    //                 )
-    //         }))
+    .Lookup(
+        ConditionPayload('Course', 'currentCourse',
+            {
+                variableList: [
+                    { var: 'courseId', source: 'currentCourse.typeId', key: 'primary' }
+                ],
+                nestedAggregation: new AggregationBuilder('Course')
+                    .Project(OnlyPayload('id', 'title', 'description', 'bannerTitle', 'bannerDescription', 'badgeDescription', 'defaultLoComponentRule', 'chapters'))
+                    .Lookup(
+                        ConditionPayload('Chapter', 'chapters',
+                            {
+                                variableList: [
+                                    { var: 'chapterId', source: 'chapters.typeId', key: 'primary' }
+                                ],
+                                nestedAggregation: new AggregationBuilder('Chapter')
+                                    .Match(Expression(Equal('$status', 'published')))
+                                    .Project(OnlyPayload('id', 'title', 'order', 'topics'))
+                                    .Lookup(
+                                        ConditionPayload('Topic', 'topics',
+                                            {
+                                                variableList: [
+                                                    { var: 'topicsId', source: 'topics.typeId', key: 'primary' }
+                                                ],
+                                                nestedAggregation: TopicsAggregation
+                                            })
+                                    )
+                            })
+                    )
+            }))
     .Lookup(
         ConditionPayload('Topic', 'currentTopic',
             {
                 project: OnlyPayload('id', 'order'),
                 variableList: [
-                    { var: 'currentTopicId', source: 'currentTopic.typeId' },
+                    { var: 'currentTopicId', source: 'currentTopic.typeId', key: "primary" },
                 ],
             }))
     .Project({

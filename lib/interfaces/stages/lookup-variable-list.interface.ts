@@ -18,4 +18,8 @@ export interface LookupVariableListInterface {
      * To Overide Equals variable in nested pipline.
      */
     overideEqualsVar?: string,
+    /**
+     * Indicates if source is a list.
+     */
+    isList?: boolean,
 }

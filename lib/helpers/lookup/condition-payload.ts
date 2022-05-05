@@ -62,7 +62,7 @@ export const ConditionPayload = (
         pipeline.unshift({
             $match: {
                 $expr: {
-                    $eq: [`$${keyMatchField.overideEqualsVar || 'id'}`, `$$${keyMatchField?.var}`]
+                    [keyMatchField?.isList ? '$in' : '$eq']: [`$${keyMatchField.overideEqualsVar || 'id'}`, `$$${keyMatchField?.var}`]
                 }
             }
         })
