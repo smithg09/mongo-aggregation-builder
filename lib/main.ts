@@ -164,11 +164,11 @@ export class AggregationBuilder {
     /**
      * Return the constructed pipeline
      */
-    public readonly getPipeline = () => {
+    public readonly getPipeline = (options?: { allowEmpty: boolean }) => {
         this.saveActionToDebugHistoryList('getPipeline');
         return !this.pagingStage.length
-            ? this.verifyPipelineValidity([...this.stageList])
-            : this.paginatePipelineResults(this.verifyPipelineValidity([...this.stageList]));
+            ? this.verifyPipelineValidity([...this.stageList], options?.allowEmpty)
+            : this.paginatePipelineResults(this.verifyPipelineValidity([...this.stageList], options?.allowEmpty));
     }
 
     /**
@@ -586,9 +586,10 @@ export class AggregationBuilder {
      * Check the validity of the pipeline
      * @param pipelineBuilt The pipeline built
      */
-    private readonly verifyPipelineValidity = (pipelineBuilt: StageInterface[]) => {
+    private readonly verifyPipelineValidity = (pipelineBuilt: StageInterface[], allowEmpty?: boolean) => {
         this.log('info', `verifyPipelineValidity of ${this.pipelineName} pipeline:\n`, JSON.stringify(this.stageList));
         if (!pipelineBuilt.length) {
+            if (allowEmpty) return pipelineBuilt;
             throw new PipelineError(`Error, ${this.pipelineName} pipeline is empty!`);
         }
 
