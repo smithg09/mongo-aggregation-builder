@@ -48,7 +48,10 @@ export const ConditionPayload = (
         }
         optional.variableList.forEach(s => {
             if (typeof s === 'object') {
-                letObject[s.var] = '$' + s.source;
+                const defaultValueForLetVar = s?.isList ? [] : null;
+                letObject[s.var] = {
+                    $ifNull: ['$' + s.source, defaultValueForLetVar]
+                };
                 if (s?.key === 'primary') {
                     keyMatchField = s;
                 }
