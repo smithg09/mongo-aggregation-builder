@@ -6,13 +6,6 @@
 
 </div>
 
-
-<p style="text-align: justify; width: 100%;font-size: 15px;">
-
-### **Note: This project is forked and a continuation of [mongo-pipeline-builder](https://github.com/MikeDev75015/mongodb-pipeline-builder). highly recommeded to check that out. Few Addons are being built upon the existing codebase**
-
-<br />
-
 **mongodb-aggregation-builder** is a aggregation builder for the [db.collection.aggregate](https://docs.mongodb.com/manual/reference/method/db.collection.aggregate/) method and db.aggregate method.
 
 - Simplify aggregations by making them more readable
